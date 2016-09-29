@@ -123,10 +123,12 @@
   and metric."
   [tag-fields event]
   (when (and (:time event) (:service event) (:metric event))
-    {"measurement" (:service event)
-     "time" (long (:time event))
-     "tags" (event-tags tag-fields event)
-     "fields" (event-fields tag-fields event)}))
+    (let [base {"measurement" (:service event)
+                "tags" (event-tags tag-fields event)
+                "fields" (event-fields tag-fields event)}]
+      (try (assoc base "time" (long (:time event)))
+           (catch Exception e (merge base {"precision" "n"
+                                           "time" (:time event)}))))))
 
 (defn events->points-9
   "Converts a collection of Riemann events into InfluxDB points. Events which
